@@ -90,10 +90,10 @@ public class DynmapBlockScanPlugin
 
     
     public static class BlockRecord {
-    	public StateContainer sc;
-    	public Map<StateRec, List<VariantList>> varList;	// Model references for block
-    	public Set<String> renderProps;	// Set of render properties
-    	public IStateHandler handler;		// Best handler
+        public StateContainer sc;
+        public Map<StateRec, List<VariantList>> varList;    // Model references for block
+        public Set<String> renderProps; // Set of render properties
+        public IStateHandler handler;       // Best handler
     }
     
     private IStateHandlerFactory[] state_handler = {
@@ -133,21 +133,21 @@ public class DynmapBlockScanPlugin
         // Load override resources
         InputStream override_str = openResource("dynmapblockscan", "blockstateoverrides.json");
         if (override_str != null) {
-        	Reader rdr = new InputStreamReader(override_str, Charsets.UTF_8);
+            Reader rdr = new InputStreamReader(override_str, Charsets.UTF_8);
             GsonBuilder gb = new GsonBuilder(); // Start with builder
             gb.registerTypeAdapter(BlockTintOverride.class, new BlockTintOverride.Deserializer()); // Add Condition handler1
             Gson parse = gb.create();
             JsonReader jrdr = new JsonReader(rdr);
             jrdr.setLenient(true);
-        	overrides = parse.fromJson(jrdr, BlockStateOverrides.class);
-        	try {
-				override_str.close();
-			} catch (IOException e) {
-			}
+            overrides = parse.fromJson(jrdr, BlockStateOverrides.class);
+            try {
+                override_str.close();
+            } catch (IOException e) {
+            }
         }
         else {
-        	logger.info("Failed to load block overrides");
-        	overrides = new BlockStateOverrides();
+            logger.info("Failed to load block overrides");
+            overrides = new BlockStateOverrides();
         }
         // Scan other modules for block overrides
         for (Entry<String, ModContainer> mod : Loader.instance().getIndexedModList().entrySet()) {
@@ -190,33 +190,33 @@ public class DynmapBlockScanPlugin
             boolean uses_model = false;
             boolean uses_nonmodel = false;
             for (IBlockState bs : bsc.getValidStates()) {
-            	switch (bs.getRenderType()) {
-            		case MODEL:
-            			uses_model = true;
-            			break;
-            		case INVISIBLE:
-            			uses_nonmodel = true;
-            			if (DynmapBlockScanMod.verboselogging)
-            			    logger.info(String.format("%s: Invisible block - nothing to render", rl));
-            			break;
-            		case ENTITYBLOCK_ANIMATED:
-            			uses_nonmodel = true;
+                switch (bs.getRenderType()) {
+                    case MODEL:
+                        uses_model = true;
+                        break;
+                    case INVISIBLE:
+                        uses_nonmodel = true;
                         if (DynmapBlockScanMod.verboselogging)
-                   			logger.info(String.format("%s: Animated block - needs to be handled specially", rl));
-            			break;
-            		case LIQUID:
-            			uses_nonmodel = true;
+                            logger.info(String.format("%s: Invisible block - nothing to render", rl));
+                        break;
+                    case ENTITYBLOCK_ANIMATED:
+                        uses_nonmodel = true;
+                        if (DynmapBlockScanMod.verboselogging)
+                            logger.info(String.format("%s: Animated block - needs to be handled specially", rl));
+                        break;
+                    case LIQUID:
+                        uses_nonmodel = true;
                         if (DynmapBlockScanMod.verboselogging)
                             logger.info(String.format("%s: Liquid block - special handling", rl));
-            			break;
-            	}
+                        break;
+                }
             }
             // Not model block - nothing else to do yet
             if (!uses_model) {
-            	continue;
+                continue;
             }
             else if (uses_nonmodel) {
-            	logger.warning(String.format("%s: Block mixes model and nonmodel state handling!", rl));
+                logger.warning(String.format("%s: Block mixes model and nonmodel state handling!", rl));
             }
             // Generate property value map
             Map<String, List<String>> propMap = buildPropoertMap(bsc);
@@ -225,33 +225,33 @@ public class DynmapBlockScanPlugin
             // Build block record
             BlockRecord br = new BlockRecord();
             // Process blockstate
-        	if (blockstate != null) {
+            if (blockstate != null) {
                 br.renderProps = blockstate.getRenderProps();
-        	}
-        	// Build generic block state container for block
-        	br.sc = new ForgeStateContainer(b, br.renderProps, propMap);
-        	if (blockstate != null) {
+            }
+            // Build generic block state container for block
+            br.sc = new ForgeStateContainer(b, br.renderProps, propMap);
+            if (blockstate != null) {
                 BlockStateOverride ovr = overrides.getOverride(rl.getResourceDomain(), rl.getResourcePath());
-            	br.varList = new HashMap<StateRec, List<VariantList>>();
-        		// Loop through rendering states in state container
-        		for (StateRec sr : br.sc.getValidStates()) {
+                br.varList = new HashMap<StateRec, List<VariantList>>();
+                // Loop through rendering states in state container
+                for (StateRec sr : br.sc.getValidStates()) {
                     Map<String, String> prop = sr.getProperties();
                     // If we've got key=value for block (multiple blocks in same state file)
                     if ((ovr != null) && (ovr.blockStateKey != null) && (ovr.blockStateValue != null)) {
                         prop = new HashMap<String, String>(prop);
                         prop.put(ovr.blockStateKey, ovr.blockStateValue);
                     }
-        			List<VariantList> vlist = blockstate.getMatchingVariants(prop, models);
-        			br.varList.put(sr, vlist);
-        		}
-        	}
-        	else {
-        	    br.varList = Collections.emptyMap();
-        	}
+                    List<VariantList> vlist = blockstate.getMatchingVariants(prop, models);
+                    br.varList.put(sr, vlist);
+                }
+            }
+            else {
+                br.varList = Collections.emptyMap();
+            }
             // Check for matching handler
             br.handler = null;
             for (IStateHandlerFactory f : state_handler) {
-              	br.handler = f.canHandleBlockState(br.sc);
+                br.handler = f.canHandleBlockState(br.sc);
                 if (br.handler != null) {
                     break;
                 }
@@ -264,59 +264,59 @@ public class DynmapBlockScanPlugin
         
         logger.info("Loading models....");
         for (String blkname : blockRecords.keySet()) {
-        	BlockRecord br = blockRecords.get(blkname);
-        	if (br.sc != null) {
-        		for (Entry<StateRec, List<VariantList>> var : br.varList.entrySet()) {
-        			for (VariantList vl : var.getValue()) {
-        				for (Variant va : vl.variantList) {
-        					if (va.model != null) {
-        						String[] tok = va.model.split(":");
-        						if (tok.length == 1) {
-        							tok = new String[] { "minecraft", "block/" + tok[0] };
-        						}
-        						else {
-        							tok[1] = "block/" + tok[1];
-        						}
-        						String modid = tok[0] + ":" + tok[1];
-        						BlockModel mod = models.get(modid);	// See if we have it
-        						if (mod == null) {
-        							mod = loadBlockModelFile(tok[0], tok[1]);
-    								models.put(modid, mod);
-        						}
-        						va.modelID = modid;	// save normalized ID
-        					}
-        				}
-        			}
-        		}
-        	}
+            BlockRecord br = blockRecords.get(blkname);
+            if (br.sc != null) {
+                for (Entry<StateRec, List<VariantList>> var : br.varList.entrySet()) {
+                    for (VariantList vl : var.getValue()) {
+                        for (Variant va : vl.variantList) {
+                            if (va.model != null) {
+                                String[] tok = va.model.split(":");
+                                if (tok.length == 1) {
+                                    tok = new String[] { "minecraft", "block/" + tok[0] };
+                                }
+                                else {
+                                    tok[1] = "block/" + tok[1];
+                                }
+                                String modid = tok[0] + ":" + tok[1];
+                                BlockModel mod = models.get(modid); // See if we have it
+                                if (mod == null) {
+                                    mod = loadBlockModelFile(tok[0], tok[1]);
+                                    models.put(modid, mod);
+                                }
+                                va.modelID = modid; // save normalized ID
+                            }
+                        }
+                    }
+                }
+            }
         }
         logger.info("Variant models loaded");
         // Now, resolve all parent references - load additional models
         LinkedList<BlockModel> modelToResolve = new LinkedList<BlockModel>(models.values());
         while (modelToResolve.isEmpty() == false) {
-        	BlockModel mod = modelToResolve.pop();
-        	if (mod.parent != null) {	// If parent reference
-        		String modid = mod.parent;
-        		if (modid.indexOf(':') < 0) {
-        			modid = "minecraft:" + modid;
-        		}
-        		mod.parentModel = models.get(modid);	// Look up: see if already loaded
-        		if (mod.parentModel == null) {
-					String[] tok = modid.split(":");
-					mod.parentModel = loadBlockModelFile(tok[0], tok[1]);
-					models.put(modid, mod.parentModel);
-					modelToResolve.push(mod.parentModel);
-        		}
-        	}
+            BlockModel mod = modelToResolve.pop();
+            if (mod.parent != null) {   // If parent reference
+                String modid = mod.parent;
+                if (modid.indexOf(':') < 0) {
+                    modid = "minecraft:" + modid;
+                }
+                mod.parentModel = models.get(modid);    // Look up: see if already loaded
+                if (mod.parentModel == null) {
+                    String[] tok = modid.split(":");
+                    mod.parentModel = loadBlockModelFile(tok[0], tok[1]);
+                    models.put(modid, mod.parentModel);
+                    modelToResolve.push(mod.parentModel);
+                }
+            }
         }
         logger.info("Parent models loaded and resolved");
         // Now resolve the elements for all the variants
         for (String blkname : blockRecords.keySet()) {
-        	BlockRecord br = blockRecords.get(blkname);
-        	if (br.sc != null) {
-        		for (Entry<StateRec, List<VariantList>> var : br.varList.entrySet()) {
-        		    // Produce merged element lists : for now, ignore random weights and just use first element of each section
-        		    List<BlockElement> elems = new ArrayList<BlockElement>();
+            BlockRecord br = blockRecords.get(blkname);
+            if (br.sc != null) {
+                for (Entry<StateRec, List<VariantList>> var : br.varList.entrySet()) {
+                    // Produce merged element lists : for now, ignore random weights and just use first element of each section
+                    List<BlockElement> elems = new ArrayList<BlockElement>();
                     for (VariantList vl : var.getValue()) {
                         if (vl.variantList.size() > 0) {
                             Variant va = vl.variantList.get(0);
@@ -348,8 +348,8 @@ public class DynmapBlockScanPlugin
                             registerDynmapPatches(blkname, var.getKey(), elems, br.sc.getBlockType());
                         }
                     }
-        		}
-        	}
+                }
+            }
         }
         logger.info("Elements generated");
         
@@ -359,27 +359,27 @@ public class DynmapBlockScanPlugin
     private ModSupportAPI dynmap_api;
     
     private static class ModDynmapRec {
-    	ModTextureDefinition txtDef;
-    	ModModelDefinition modDef;
-    	Map<String, TextureFile> textureIDsByPath = new HashMap<String, TextureFile>();
-    	int nextTxtID = 1;
-    	
-    	public TextureFile registerTexture(String txtpath) {
-    	    txtpath = txtpath.toLowerCase();
-    		TextureFile txtf = textureIDsByPath.get(txtpath);
-    		if (txtf == null) {
-    			String txtid = String.format("txt%04d", nextTxtID);
-    			nextTxtID++;	// Assign next ID
-    			// Split path to build full path
-    			String[] ptok = txtpath.split(":");
-    			String fname = "assets/" + ptok[0] + "/textures/" + ptok[1] + ".png";
-    			txtf = txtDef.registerTextureFile(txtid, fname);
-    			if (txtf != null) {
-    				textureIDsByPath.put(txtpath, txtf);
-    			}
-    		}
-    		return txtf;
-    	}
+        ModTextureDefinition txtDef;
+        ModModelDefinition modDef;
+        Map<String, TextureFile> textureIDsByPath = new HashMap<String, TextureFile>();
+        int nextTxtID = 1;
+        
+        public TextureFile registerTexture(String txtpath) {
+            txtpath = txtpath.toLowerCase();
+            TextureFile txtf = textureIDsByPath.get(txtpath);
+            if (txtf == null) {
+                String txtid = String.format("txt%04d", nextTxtID);
+                nextTxtID++;    // Assign next ID
+                // Split path to build full path
+                String[] ptok = txtpath.split(":");
+                String fname = "assets/" + ptok[0] + "/textures/" + ptok[1] + ".png";
+                txtf = txtDef.registerTextureFile(txtid, fname);
+                if (txtf != null) {
+                    textureIDsByPath.put(txtpath, txtf);
+                }
+            }
+            return txtf;
+        }
         public TextureFile registerBiomeTexture(String txtpath) {
             TextureFile txtf = textureIDsByPath.get(txtpath);
             if (txtf == null) {
@@ -484,27 +484,27 @@ public class DynmapBlockScanPlugin
     }
         
     public void registerSimpleDynmapCubes(String blkname, StateRec state, BlockElement element, WellKnownBlockClasses type) {
-    	String[] tok = blkname.split(":");
-    	String modid = tok[0];
-    	String blknm = tok[1];
-    	int[] meta = state.metadata;
-    	if (tok[0].equals("minecraft")) {	// Skip vanilla
-    		return;
-    	}
+        String[] tok = blkname.split(":");
+        String modid = tok[0];
+        String blknm = tok[1];
+        int[] meta = state.metadata;
+        if (tok[0].equals("minecraft")) {   // Skip vanilla
+            return;
+        }
         // Temporary hack to avoid registering metadata duplicates
-    	meta = pruneDuplicateMeta(blkname, meta); 
-    	if (meta.length == 0) {
+        meta = pruneDuplicateMeta(blkname, meta); 
+        if (meta.length == 0) {
             return;
         }
 
-    	// Get record for mod
-    	ModDynmapRec td = getModRec(modid);
-    	// Create block texture record
-    	BlockTextureRecord btr = td.getBlockTxtRec(blknm, meta);
-    	if (btr == null) {
-    		return;
-    	}
-    	boolean tinting = false;   // Watch out for tinting
+        // Get record for mod
+        ModDynmapRec td = getModRec(modid);
+        // Create block texture record
+        BlockTextureRecord btr = td.getBlockTxtRec(blknm, meta);
+        if (btr == null) {
+            return;
+        }
+        boolean tinting = false;   // Watch out for tinting
         for (BlockFace f : element.faces.values()) {
             if (f.tintindex >= 0) {
                 tinting = true;
@@ -535,32 +535,32 @@ public class DynmapBlockScanPlugin
             }
         }
        
-    	// Loop over the images for the element
-    	for (Entry<EnumFacing, BlockFace> face : element.faces.entrySet()) {
-    	    EnumFacing facing = face.getKey();
-    		BlockFace f = face.getValue();
-    		BlockSide bs = faceToSide.get(facing);
-    		if ((bs != null) && (f.texture != null)) {
-    			TextureFile gtf = td.registerTexture(f.texture);
-				int faceidx = (360-f.rotation);
-				if (!element.uvlock) {
-				    faceidx = faceidx + f.facerotation;
-				}
+        // Loop over the images for the element
+        for (Entry<EnumFacing, BlockFace> face : element.faces.entrySet()) {
+            EnumFacing facing = face.getKey();
+            BlockFace f = face.getValue();
+            BlockSide bs = faceToSide.get(facing);
+            if ((bs != null) && (f.texture != null)) {
+                TextureFile gtf = td.registerTexture(f.texture);
+                int faceidx = (360-f.rotation);
+                if (!element.uvlock) {
+                    faceidx = faceidx + f.facerotation;
+                }
                 TextureModifier tm = TextureModifier.NONE;
-			    switch (faceidx % 360) {
-					case 90:
-						tm = TextureModifier.ROT90;
-						break;
-					case 180:
-						tm = TextureModifier.ROT180;
-						break;
-					case 270:
-						tm = TextureModifier.ROT270;
-						break;
-				}
-				btr.setSideTexture(gtf, tm, bs);
-    		}
-    	}
+                switch (faceidx % 360) {
+                    case 90:
+                        tm = TextureModifier.ROT90;
+                        break;
+                    case 180:
+                        tm = TextureModifier.ROT180;
+                        break;
+                    case 270:
+                        tm = TextureModifier.ROT270;
+                        break;
+                }
+                btr.setSideTexture(gtf, tm, bs);
+            }
+        }
     }
 
     public boolean isSimpleCuboid(List<BlockElement> elements) {
@@ -875,16 +875,16 @@ public class DynmapBlockScanPlugin
 
     
     public void publishDynmapModData() {
-    	for (ModDynmapRec mod : modTextureDef.values()) {
-    		if (mod.txtDef != null) {
-    			mod.txtDef.publishDefinition();
+        for (ModDynmapRec mod : modTextureDef.values()) {
+            if (mod.txtDef != null) {
+                mod.txtDef.publishDefinition();
                 logger.info("Published " + mod.txtDef.getModID() + " textures to Dynmap");
-    		}
-    		if (mod.modDef != null) {
+            }
+            if (mod.modDef != null) {
                 mod.modDef.publishDefinition();
                 logger.info("Published " + mod.modDef.getModID() + " models to Dynmap");
             }
-    	}
+        }
     
     }
     
@@ -924,123 +924,123 @@ public class DynmapBlockScanPlugin
     }
     
     public Map<String, List<String>> buildPropoertMap(BlockStateContainer bsc) {
-    	Map<String, List<String>> renderProperties = new HashMap<String, List<String>>();
-		// Build table of render properties and valid values
-		for (IProperty<?> p : bsc.getProperties()) {
-			String pn = p.getName();
-			ArrayList<String> pvals = new ArrayList<String>();
-			for (Comparable<?> val : p.getAllowedValues()) {
-				if (val instanceof IStringSerializable) {
-					pvals.add(((IStringSerializable)val).getName());
-				}
-				else {
-					pvals.add(val.toString());
-				}
-			}
-			renderProperties.put(pn, pvals);
-		}
-		return renderProperties;
+        Map<String, List<String>> renderProperties = new HashMap<String, List<String>>();
+        // Build table of render properties and valid values
+        for (IProperty<?> p : bsc.getProperties()) {
+            String pn = p.getName();
+            ArrayList<String> pvals = new ArrayList<String>();
+            for (Comparable<?> val : p.getAllowedValues()) {
+                if (val instanceof IStringSerializable) {
+                    pvals.add(((IStringSerializable)val).getName());
+                }
+                else {
+                    pvals.add(val.toString());
+                }
+            }
+            renderProperties.put(pn, pvals);
+        }
+        return renderProperties;
     }
     
     // Build ImmutableMap<String, String> from properties in IBlockState
     public ImmutableMap<String, String> fromIBlockState(IBlockState bs) {
-    	ImmutableMap.Builder<String,String> bld = ImmutableMap.builder();
-    	for (Entry<IProperty<?>, Comparable<?>> x : bs.getProperties().entrySet()) {
-    		Comparable<?> v = x.getValue();
-    		if (v instanceof IStringSerializable) {
-    			bld.put(x.getKey().getName(), ((IStringSerializable)v).getName());
-    		}
-    		else {
-    			bld.put(x.getKey().getName(), v.toString());
-    		}
-    	}
-    	return bld.build();
+        ImmutableMap.Builder<String,String> bld = ImmutableMap.builder();
+        for (Entry<IProperty<?>, Comparable<?>> x : bs.getProperties().entrySet()) {
+            Comparable<?> v = x.getValue();
+            if (v instanceof IStringSerializable) {
+                bld.put(x.getKey().getName(), ((IStringSerializable)v).getName());
+            }
+            else {
+                bld.put(x.getKey().getName(), v.toString());
+            }
+        }
+        return bld.build();
     }
     
     private static BlockState loadBlockState(String modid, String respath, BlockStateOverrides override, Map<String, List<String>> propMap) {
-    	BlockStateOverride ovr = override.getOverride(modid, respath);
-    	
-    	if (ovr == null) {	// No override
-    		return loadBlockStateFile(modid, respath);
-    	}
-    	else if (ovr.blockStateName != null) {	// Simple override
-    		return loadBlockStateFile(modid, ovr.blockStateName);
-    	}
-    	else if (ovr.baseNameProperty != null) {	// MUltiple files based on base property
-    		List<String> vals = propMap.get(ovr.baseNameProperty);	// Look up defned values
-    		if (vals == null) {
-    			Log.error(String.format("%s:%s : bad baseNameProperty=%s",  modid, respath, ovr.baseNameProperty));;
-    			return null;
-    		}
-    		BlockState bs = new BlockState();
-    		bs.nestedProp = ovr.baseNameProperty;
-    		bs.nestedValueMap = new HashMap<String, BlockState>();
-    		for (String v : vals) {
-    			BlockState bs2 = loadBlockStateFile(modid, v + ovr.nameSuffix);
-    			if (bs2 != null) {
-    				bs.nestedValueMap.put(v,  bs2);
-    			}
-    		}
-    		return bs;
-    	}
+        BlockStateOverride ovr = override.getOverride(modid, respath);
+        
+        if (ovr == null) {  // No override
+            return loadBlockStateFile(modid, respath);
+        }
+        else if (ovr.blockStateName != null) {  // Simple override
+            return loadBlockStateFile(modid, ovr.blockStateName);
+        }
+        else if (ovr.baseNameProperty != null) {    // MUltiple files based on base property
+            List<String> vals = propMap.get(ovr.baseNameProperty);  // Look up defned values
+            if (vals == null) {
+                Log.error(String.format("%s:%s : bad baseNameProperty=%s",  modid, respath, ovr.baseNameProperty));;
+                return null;
+            }
+            BlockState bs = new BlockState();
+            bs.nestedProp = ovr.baseNameProperty;
+            bs.nestedValueMap = new HashMap<String, BlockState>();
+            for (String v : vals) {
+                BlockState bs2 = loadBlockStateFile(modid, v + ovr.nameSuffix);
+                if (bs2 != null) {
+                    bs.nestedValueMap.put(v,  bs2);
+                }
+            }
+            return bs;
+        }
 
-		return null;
+        return null;
     }
     
     private static BlockState loadBlockStateFile(String modid, String respath) {
         String path = "assets/" + modid + "/blockstates/" + respath + ".json";
-    	BlockState bs = null;
+        BlockState bs = null;
         InputStream is = openResource(modid, path);
-        if (is != null) {	// Found it?
-        	Reader rdr = new InputStreamReader(is, Charsets.UTF_8);
-        	Gson parse = BlockState.buildParser();	// Get parser
-        	try {
+        if (is != null) {   // Found it?
+            Reader rdr = new InputStreamReader(is, Charsets.UTF_8);
+            Gson parse = BlockState.buildParser();  // Get parser
+            try {
                 JsonReader jrdr = new JsonReader(rdr);
                 jrdr.setLenient(true);
-        	    bs = parse.fromJson(jrdr, BlockState.class);
-        	} catch (JsonSyntaxException jsx) {
+                bs = parse.fromJson(jrdr, BlockState.class);
+            } catch (JsonSyntaxException jsx) {
                 logger.warning(String.format("%s:%s : JSON syntax error in block state file", modid, path), jsx);
-        	}
-        	try {
-        	    is.close();
-			} catch (IOException e) {
-			}
-        	if (bs == null) {
-        		logger.info(String.format("%s:%s : Failed to load blockstate!", modid, path));
-        	}
+            }
+            try {
+                is.close();
+            } catch (IOException e) {
+            }
+            if (bs == null) {
+                logger.info(String.format("%s:%s : Failed to load blockstate!", modid, path));
+            }
         }
         else {
-    		logger.info(String.format("%s:%s : Failed to open blockstate", modid, path));
+            logger.info(String.format("%s:%s : Failed to open blockstate", modid, path));
         }
         return bs;
     }
     
     private static BlockModel loadBlockModelFile(String modid, String respath) {
         String path = "assets/" + modid + "/models/" + respath + ".json";
-    	BlockModel bs = null;
+        BlockModel bs = null;
         InputStream is = openResource(modid, path);
-        if (is != null) {	// Found it?
-        	Reader rdr = new InputStreamReader(is, Charsets.UTF_8);
-        	Gson parse = BlockModel.buildParser();	// Get parser
-        	try {
-        	    JsonReader jrdr = new JsonReader(rdr);
-        	    jrdr.setLenient(true);
-        	    bs = parse.fromJson(jrdr, BlockModel.class);
-        	} catch (JsonSyntaxException jsx) {
+        if (is != null) {   // Found it?
+            Reader rdr = new InputStreamReader(is, Charsets.UTF_8);
+            Gson parse = BlockModel.buildParser();  // Get parser
+            try {
+                JsonReader jrdr = new JsonReader(rdr);
+                jrdr.setLenient(true);
+                bs = parse.fromJson(jrdr, BlockModel.class);
+            } catch (JsonSyntaxException jsx) {
                 logger.warning(String.format("%s:%s : JSON syntax error in model file", modid, path), jsx);
-        	}
-        	try {
-				is.close();
-			} catch (IOException e) {
-			}
-        	if (bs == null) {
-        		logger.info(String.format("%s:%s : Failed to load model!", modid, path));
+            }
+            try {
+                is.close();
+            } catch (IOException e) {
+            }
+            if (bs == null) {
+                logger.info(String.format("%s:%s : Failed to load model!", modid, path));
                 bs = new BlockModel();    // Return empty model
-        	}
+            }
         }
         else {
-    		logger.info(String.format("%s:%s : Failed to open model", modid, path));
-    		bs = new BlockModel();    // Return empty model
+            logger.info(String.format("%s:%s : Failed to open model", modid, path));
+            bs = new BlockModel();    // Return empty model
         }
         return bs;
     }
